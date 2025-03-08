@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Workflow {
+  id            String   @id @default(cuid()) @map("_id")
+  userId        String
+  name          String
+  description   String?
+  definition    String
+  executionPlan String?
+  creditsCost   Int      @default(0)
+  cron          String?
+  status        String
+  lastRunAt     DateTime?
+  lastRunId     String?
+  lastRunStatus String?
+  nextRunAt     DateTime?
+  createdAt     DateTime @default(now())
+  updateAt      DateTime @updatedAt
+  executions    WorkflowExecution[]
+
+  @@unique([name, userId])
+}
+
+model WorkflowExecution {
+  id              String   @id @default(cuid()) @map("_id")
+  workflowId      String
+  userId          String
+  trigger         String
+  status          String
+  createdAt       DateTime @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+  definition      String   @default("{}")
+  creditsConsumed Int      @default(0)
+  phases          ExecutionPhase[]
+  workflow        Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+}
+
+model ExecutionPhase {
+  id                  String @id @default(cuid()) @map("_id")
+  userId              String
+  status              String
+  number              Int
+  node                String
+  name                String
+  startedAt           DateTime?
+  completedAt         DateTime?
+  inputs              String?
+  outputs             String?
+  creditsConsumed     Int?
+  workflowExecutionId String
+  execution           WorkflowExecution @relation(fields: [workflowExecutionId], references: [id], onDelete: Cascade)
+
+  logs ExecutionLog[]
+}
+
+model ExecutionLog {
+  id                String         @id @default(cuid()) @map("_id")
+  logLevel          String
+  message           String
+  timestamp         DateTime       @default(now())
+  executionPhaseId  String
+  executionPhase    ExecutionPhase @relation(fields: [executionPhaseId], references: [id], onDelete: Cascade)
+}
+
+model UserBalance {
+  userId  String @id @map("_id")
+  credits Int    @default(0)
+}
+
+model Credential {
+  id        String   @id @default(cuid()) @map("_id")
+  userId    String
+  name      String
+  value     String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, name])
+}
+
+model UserPurchase {
+  id          String   @id @default(cuid()) @map("_id")
+  userId      String
+  stripeId    String
+  description String
+  amount      Int
+  currency    String
+  date        DateTime @default(now())
+}
