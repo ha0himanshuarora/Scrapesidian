@@ -6,7 +6,7 @@ import { LaunchBrowserTask } from "../task/LaunchBrowser";
 export async function LaunchBrowserExecutor(environment:ExecutionEnvironment<typeof LaunchBrowserTask>):Promise<boolean>{
     try{
         const websiteUrl=environment.getInput("Website URL");
-        const browser=await puppeteer.launch({headless:true,executablePath: '/usr/bin/google-chrome'});//for testing
+        const browser=await puppeteer.launch({headless:false,executablePath: '/usr/bin/google-chrome'});//for testing
         environment.log.info("Browser started successfully");
         environment.setBrowser(browser);
         const page =await browser.newPage();
