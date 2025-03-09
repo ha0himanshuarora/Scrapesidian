@@ -38,20 +38,18 @@ export async function ExtractDataWithAiExecutor(environment: ExecutionEnvironmen
             return false;
         }
 
-        // Log the entire decrypted API key for debugging purposes
         environment.log.info(`Decrypted Gemini API Key: ${plainCredentialValue}`);
 
-        // Set up the Gemini API client with the decrypted key
         const genAI = new GoogleGenerativeAI(plainCredentialValue);
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
 
         const chat = model.startChat({
             history: [
                 {
                     role: "user",
-                    parts: [ // Wrap the string in an array of parts.
+                    parts: [
                         {
-                            text: `You're a webscraper helper that extracts data from HTML or text. You'll be given HTML or text as input and a prompt with the data you need to extract. The response should always be only extracted data as a JSON array or object, without any additional words or explanations. Analyze the input carefully and extract data precisely based on the prompt. If no data is found, return an empty JSON array. Work only with provided content and ensure output is always a valid JSON array without any surrounding text.`,
+                            text: `You're a webscraper helper that extracts data from HTML or text. You'll be given HTML or text as input and a prompt with the data you need to extract. The response should always be only extracted data as a JSON object, without any additional words or explanations. Analyze the input carefully and extract data precisely based on the prompt. If no data is found, return an empty JSON object. Work only with provided content and ensure output is always a valid JSON object without any surrounding text.`,
                         },
                     ],
                 },
@@ -67,11 +65,31 @@ export async function ExtractDataWithAiExecutor(environment: ExecutionEnvironmen
             return false;
         }
 
-        environment.setOutput("Extracted Data", text);
-        return true;
+        try {
+            const jsonObject = JSON.parse(text);
 
-    } catch (error: any) {
-        environment.log.error(error.message);
+            const extractedData = {
+                usernameSelector: jsonObject.usernameSelector,
+                passwordSelector: jsonObject.passwordSelector,
+                loginSelector: jsonObject.loginSelector,
+            };
+
+            environment.setOutput("Extracted data", JSON.stringify(extractedData));
+            return true;
+        } catch (error) {
+            if (error instanceof Error) {
+                environment.log.error("Invalid JSON response from Gemini: " + error.message);
+            } else {
+                environment.log.error("Invalid JSON response from Gemini: unknown error");
+            }
+            return false;
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            environment.log.error(error.message);
+        } else {
+            environment.log.error("An unknown error occurred");
+        }
         return false;
     }
 }
