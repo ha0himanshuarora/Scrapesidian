@@ -9,7 +9,7 @@ function Logo({fontSize="text-2xl",iconSize=20}:{fontSize?:string;iconSize?:numb
     return (
     <div className={cn("text-2xl font-extrabold flex items-center gap-2", fontSize)}>
       <Link className="flex font-bold flex-row p-2" href="/">
-        <Image src="/ObsidianLogo.png" width={40} height={40} alt="Obsidian logo" className="shadow-sm"/>
+        <Image src="/ObsidianLogo.png" width={35} height={35} alt="Obsidian logo" className="shadow-sm"/>
       </Link>
 
         
